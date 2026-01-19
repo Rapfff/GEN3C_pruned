@@ -1,0 +1,17 @@
+CUDA_VISIBLE_DEVICES=0 CUDA_HOME=$CONDA_PREFIX PYTHONPATH=$(pwd) python cosmos_predict1/diffusion/inference/gen3c_single_image.py \
+	--checkpoint_dir checkpoints \
+	--input_image_path assets/diffusion/000001.png \
+	--video_save_name test_single_image \
+	--guidance 1 \
+	--foreground_masking \
+	--trajectory zoom_in \
+	--camera_rotation center_facing \
+	--movement_distance 0.8 \
+	--offload_diffusion_transformer \
+	--offload_tokenizer \
+	--offload_text_encoder_model \
+	--offload_prompt_upsampler \
+	--offload_guardrail_models \
+	--disable_guardrail \
+	--seed 4242 \
+	--disable_prompt_encoder \
