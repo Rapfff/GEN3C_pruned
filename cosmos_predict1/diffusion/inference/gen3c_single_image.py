@@ -26,7 +26,7 @@ from cosmos_predict1.diffusion.inference.inference_utils import (
 )
 from cosmos_predict1.diffusion.inference.gen3c_pipeline import Gen3cPipeline
 from cosmos_predict1.utils import log, misc
-from cosmos_predict1.utils.io import read_prompts_from_file, save_video
+from cosmos_predict1.utils.io import read_prompts_from_file, save_video, save_frames
 from cosmos_predict1.diffusion.inference.cache_3d import Cache3D_Buffer
 from cosmos_predict1.diffusion.inference.camera_utils import generate_camera_trajectory
 import torch.nn.functional as F
@@ -99,6 +99,17 @@ def create_parser() -> argparse.ArgumentParser:
         "--foreground_masking",
         action="store_true",
         help="If set, use foreground masking for the warped images.",
+    )
+    parser.add_argument(
+        "--save_as_frames",
+        action="store_true",
+        help="If set, will save as a bunch of pictures instead of one .mp4 video",
+    )
+    parser.add_argument(
+        "--moge_depth",
+        type=str,
+        default=None,
+        help="If set (path to a pickle file), the model will use the data in the pickle as moge depth estimation instead of running moge.",
     )
     return parser
 
@@ -310,15 +321,40 @@ def demo(args):
             continue
 
         # load image, predict depth and initialize 3D cache
-        (
-            moge_image_b1chw_float,
-            moge_depth_b11hw,
-            moge_mask_b11hw,
-            moge_initial_w2c_b144,
-            moge_intrinsics_b133,
-        ) = _predict_moge_depth(
-            current_image_path, args.height, args.width, device, moge_model
-        )
+        if args.moge_depth is None:
+            (
+                moge_image_b1chw_float,
+                moge_depth_b11hw,
+                moge_mask_b11hw,
+                moge_initial_w2c_b144,
+                moge_intrinsics_b133
+            ) = _predict_moge_depth(
+                current_image_path,
+                args.height,
+                args.width,
+                device, 
+                moge_model
+            )
+        #from pickle import dump as pdump
+        #with open("1431_moge.pkl", 'wb') as f:
+        #    pdump({ "moge_image_b1chw_float" : moge_image_b1chw_float,
+        #            "moge_depth_b11hw" : moge_depth_b11hw,
+        #            "moge_mask_b11hw" :  moge_mask_b11hw,
+        #            "moge_initial_w2c_b144" : moge_initial_w2c_b144,
+        #            "moge_intrinsics_b133" :  moge_intrinsics_b133,
+        #            "moge_segm_b1chw_float" : moge_segm_b1chw_float},f)
+        else:
+            with open(args.moge_depth, 'rb') as fin:
+                t = pload(fin)
+            moge_image_b1chw_float = _get_moge_image_float(current_image_path, args.height, args.width, device)
+            #moge_image_b1chw_float = t['moge_image_b1chw_float']
+            moge_depth_b11hw = t['moge_depth_b11hw']
+            moge_mask_b11hw = t['moge_mask_b11hw']
+            moge_initial_w2c_b144 = t['moge_initial_w2c_b144']
+            moge_intrinsics_b133 = t['moge_intrinsics_b133']
+            moge_segm_b1chw_float= t["moge_segm_b1chw_float"]
+            del t
+            log.info("Loaded Moge Depth Successfully ! ")
 
         cache = Cache3D_Buffer(
             frame_buffer_max=frame_buffer_max,
@@ -463,18 +499,35 @@ def demo(args):
             f"{i if args.batch_input_path else args.video_save_name}.mp4"
         )
 
-        os.makedirs(os.path.dirname(video_save_path), exist_ok=True)
 
-        # Save video
-        save_video(
-            video=final_video_to_save,
-            fps=args.fps,
-            H=args.height,
-            W=final_width,
-            video_save_quality=5,
-            video_save_path=video_save_path,
-        )
-        log.info(f"Saved video to {video_save_path}")
+        if not args.save_as_frames:
+            os.makedirs(os.path.dirname(video_save_path), exist_ok=True)
+            video_save_path = os.path.join(
+                args.video_save_folder,
+                f"{i if args.batch_input_path else args.video_save_name}.mp4"
+            )
+            # Save video
+            save_video(
+                video=final_video_to_save,
+                fps=args.fps,
+                H=args.height,
+                W=final_width,
+                video_save_quality=5,
+                video_save_path=video_save_path,
+            )
+            log.info(f"Saved video to {video_save_path}")
+        else:
+            # Save frames
+            save_folder = os.path.join(args.video_save_folder,args.video_save_name)
+            os.makedirs(save_folder, exist_ok=True)
+            save_frames(
+                video=final_video_to_save,
+                H=args.height,
+                W=final_width,
+                frames_save_dir=save_folder,
+                prefix="f",
+            )
+            log.info(f"Saved images to {save_folder}")
 
     # clean up properly
     if args.num_gpus > 1:

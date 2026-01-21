@@ -16,7 +16,7 @@
 import json
 from io import BytesIO
 from typing import Dict, List
-
+from os.path import join as pjoin
 import imageio
 import numpy as np
 
@@ -42,7 +42,7 @@ def save_video(video, fps, H, W, video_save_quality, video_save_path):
     """Save video frames to file.
 
     Args:
-        grid (np.ndarray): Video frames array [T,H,W,C]
+        video (np.ndarray): Video frames array [T,H,W,C]
         fps (int): Frames per second
         H (int): Frame height
         W (int): Frame width
@@ -57,6 +57,26 @@ def save_video(video, fps, H, W, video_save_quality, video_save_path):
         "output_params": ["-f", "mp4"],
     }
     imageio.mimsave(video_save_path, video, "mp4", **kwargs)
+
+def save_frames(video, H, W, frames_save_dir, prefix="frame"):
+    """
+    Save video frames individually as images.
+
+    Args:
+        video (np.ndarray): Video frames array [T,H,W,C]
+        H (int): Frame height
+        W (int): Frame width
+        frames_save_dir (str): Directory where frames will be saved
+        prefix (str): Filename prefix for saved frames
+    """
+
+    T = video.shape[0]
+
+    for t in range(T):
+        frame = video[t]
+        assert frame.shape == (H, W, 3), f"Frame {t} has wrong shape {frame.shape}"
+        frame_filename = pjoin(frames_save_dir, f"{prefix}_{t+1}.png")
+        imageio.imwrite(frame_filename, frame)
 
 
 def load_from_fileobj(filepath: str, format: str = "mp4", mode: str = "rgb", **kwargs):
