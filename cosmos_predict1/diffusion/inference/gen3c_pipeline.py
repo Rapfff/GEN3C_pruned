@@ -164,8 +164,6 @@ class Gen3cPipeline(DiffusionVideo2WorldGenerationPipeline):
 
         # Generate video
         log.info("Run generation")
-        log.info("GENERATION DISABLED FOR TEST")
-        return
         video = self._run_model_with_offload(
             prompt_embedding,
             negative_prompt_embedding=negative_prompt_embedding,
