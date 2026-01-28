@@ -746,13 +746,13 @@ def diffusion_fsdp_class_decorator(base_class: Type[T]) -> Type[T]:
                         torch.cuda.empty_cache()
                     # for ema model with dfiferent rate, we download the model when necessary
                     if shard_idx == 0 and replica_idx > 0 and replica_idx < config.ema.num:
-                        print("loading ema model in rank", replica_idx)
+                        #print("loading ema model in rank", replica_idx)
                         self.fsdp_checkpointer.load_model_during_init(
                             model_ema,
                             is_ema=True,
                             ema_id=replica_idx,
                         )
-                        print("finish loading ema model in rank", replica_idx)
+                        #print("finish loading ema model in rank", replica_idx)
                 # 2.1.2 create FSDP model for ema model
                 with misc.timer("Creating FSDP model for EMA model"):
                     self.model_ema = FSDP(
@@ -772,7 +772,8 @@ def diffusion_fsdp_class_decorator(base_class: Type[T]) -> Type[T]:
                 divider = 2**replica_idx if replica_idx < config.ema.num else 1
                 if replica_idx < config.ema.num:
                     if shard_idx == 0:
-                        print(f"EMA: rank {replica_idx}, rate {config.ema.rate / divider}")
+                        #print(f"EMA: rank {replica_idx}, rate {config.ema.rate / divider}")
+                        pass
                 s = config.ema.rate / divider
                 self.ema_exp_coefficient = np.roots([1, 7, 16 - s**-2, 12 - s**-2]).real.max()
 

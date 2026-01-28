@@ -1354,7 +1354,7 @@ class DiffusionWorldInterpolatorGenerationPipeline(DiffusionVideo2WorldGeneratio
 
         video_output = []
         for frame_index in range(frame_index_start, num_frame_pairs):
-            print(f"Processing frame pair {frame_index + 1} / {num_frame_pairs}...")
+            #print(f"Processing frame pair {frame_index + 1} / {num_frame_pairs}...")
 
             condition_latent = self._run_tokenizer_encoding(image_or_video_path, frame_index, frame_stride)
 

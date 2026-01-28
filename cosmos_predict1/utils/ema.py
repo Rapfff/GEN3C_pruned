@@ -231,7 +231,8 @@ class EMAModelTracker(torch.nn.Module):
         num = min(num, len(rate))
         rate = rate[cur_dp_rank] if cur_dp_rank < num else rate[0]
         if cur_dp_rank < num:
-            print(f"EMAModelTracker: rank {cur_dp_rank}, rate {rate}")
+            #print(f"EMAModelTracker: rank {cur_dp_rank}, rate {rate}")
+            pass
         return cls(model, rate)
 
 
@@ -302,7 +303,8 @@ class PowerEMATracker(EMAModelTracker):
 
         divider = 2**cur_dp_rank if cur_dp_rank < num else 1
         if cur_dp_rank < num:
-            print(f"PowerEMATracker: rank {cur_dp_rank}, rate {rate / divider}")
+            # print(f"PowerEMATracker: rank {cur_dp_rank}, rate {rate / divider}")
+            pass
         return cls(model, rate / divider)
 
 

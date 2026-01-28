@@ -42,7 +42,6 @@ from cosmos_predict1.utils import log, misc
 
 def update_model_config(model_config, inference_tensor_parallel_size):
     if inference_tensor_parallel_size > 1:
-        log.warning(f"Setting tensor parallel size to {inference_tensor_parallel_size}")
         setattr(
             model_config,
             "tensor_model_parallel_size",
@@ -134,15 +133,11 @@ class AutoRegressiveModel(torch.nn.Module):
         orig_precision = torch.get_default_dtype()
         precision = getattr(torch, model_config.precision)
         torch.set_default_dtype(precision)
-        log.debug(f"Setting torch default dtype to {precision}")
 
         model = Transformer(
             params=model_config,
             model_parallel=self.model_parallel,
             tokenizer_config=tokenizer_config,
-        )
-        log.debug(
-            f"tokenizer tokenizer_config.video_tokenizer.vocab_size {tokenizer_config.video_tokenizer.vocab_size}"
         )
         vocab_size = update_vocab_size(
             existing_vocab_size=0,
@@ -150,12 +145,8 @@ class AutoRegressiveModel(torch.nn.Module):
             training_type=tokenizer_config.training_type,
             add_special_tokens=False,
         )
-        log.debug(
-            f"tokenizer tokenizer_config.video_tokenizer.vocab_size {tokenizer_config.video_tokenizer.vocab_size}  vocab_size {vocab_size}"
-        )
         # Perform vocab expansion
         if vocab_size > model.vocab_size:
-            log.debug(f"Expanding vocab size to {vocab_size}")
             # For text-to-video training, we only expand the embedding layer but not the output (unembedding) layer,
             expand_output_layer = not (tokenizer_config.training_type == "text_to_video")
             model.expand_vocab(
@@ -242,10 +233,6 @@ class AutoRegressiveModel(torch.nn.Module):
             if os.path.exists(Path(ckpt_dir) / "config.json"):
                 with open(Path(ckpt_dir) / "config.json", "r") as f:
                     config_params = json.loads(f.read())
-            else:
-                log.info(
-                    f"No params.json found in the checkpoint directory ({ckpt_dir}). " f"Using default model config."
-                )
 
         else:
             # If ckpt_path is provided, we load the model from the specified path,

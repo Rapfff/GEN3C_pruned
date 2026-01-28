@@ -317,7 +317,7 @@ def demo(args):
 
         # Check input frames
         if not check_input_frames(current_image_path, 1):
-            print(f"Input image {current_image_path} is not valid, skipping.")
+            #print(f"Input image {current_image_path} is not valid, skipping.")
             continue
 
         # load image, predict depth and initialize 3D cache

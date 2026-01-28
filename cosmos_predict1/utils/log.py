@@ -22,7 +22,7 @@ from loguru._logger import Core, Logger
 from tqdm import tqdm
 
 RANK0_ONLY = True
-LEVEL = os.environ.get("LOGURU_LEVEL", "INFO")
+LEVEL = os.environ.get("LOGURU_LEVEL", "ERROR")
 
 logger = Logger(
     core=Core(),
